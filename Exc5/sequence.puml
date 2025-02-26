@@ -1,0 +1,36 @@
+@startuml
+title  Exc5 кеширование
+
+actor operator  as "Operator"
+
+participant MES as "MES UI"
+participant mesAPI as "MES API"
+participant cache as "Cache"
+participant db as "database"
+
+== Получение информации о заказе ==
+operator -> MES : request Order
+MES -> mesAPI : getOrderById
+mesAPI -> cache : getOrderById(orderId)
+alt cache hit
+    cache -> mesAPI : return Order
+else      cache miss
+    mesAPI -> db : getOrderById
+    db -> mesAPI : return Order
+    mesAPI -> cache : save into cache orderData
+    cache -> mesAPI : return ok
+end
+mesAPI -> MES : orderData
+MES -> operator : response Order
+
+
+== Обновление информации о заказе ==
+operator -> MES : create Order
+MES -> mesAPI : create Order
+mesAPI -> db : updateOrderById(orderId)
+db -> mesAPI : return updatedOrderData
+mesAPI -> cache : updateOrderById(orderId)
+cache -> mesAPI : return ok
+mesAPI -> MES : response Order
+MES -> operator : response Order
+@enduml
